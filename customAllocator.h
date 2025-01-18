@@ -5,6 +5,8 @@
 * do no edit lines below!
 =============================================================================*/
 #include <stddef.h> //for size_t
+#include <set>
+using namespace std;
 
 void* customMalloc(size_t size);
 void customFree(void* ptr);
@@ -38,12 +40,16 @@ void* customRealloc(void* ptr, size_t size);
 * Block
 =============================================================================*/
 //suggestion for block usage - feel free to change this
-typedef struct Block
+class MemoryBlock
 {
     size_t size;
-    struct Block* next;
-    bool free;
-} Block;
-extern Block* blockList;
+    unsigned int start;
+    bool is_free;
+	public:
+		MemoryBlock(size_t Size,unsigned int Start,bool Is_free):size(Size),start(Start),is_free(Is_free){};
+		unsigned int GetEndMemoryBlock();
+		bool operator<(const MemoryBlock& other) const;
+};
+//extern Block* blockList;
 
 #endif // CUSTOM_ALLOCATOR
