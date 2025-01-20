@@ -40,16 +40,22 @@ void* customRealloc(void* ptr, size_t size);
 * Block
 =============================================================================*/
 //suggestion for block usage - feel free to change this
-class MemoryBlock
+class Block
 {
     size_t size;
     unsigned int start;
     bool is_free;
+    Block* nextBlock;
+    Block* lastBlock;
 	public:
-		MemoryBlock(size_t Size,unsigned int Start,bool Is_free):size(Size),start(Start),is_free(Is_free){};
+		Block(size_t Size,unsigned int Start,bool Is_free):size(ALIGN_TO_MULT_OF_4(Size)),start(Start),is_free(Is_free),nextBlock(NULL),lastBlock(NULL){};
 		unsigned int GetEndMemoryBlock();
-		bool operator<(const MemoryBlock& other) const;
+		void SetNextBlock(Block* NextBlock);
+		void SetLastBlock(Block* LastBlock);
+		unsigned int GetEnd();
+
 };
-//extern Block* blockList;
+extern Block* blockListFree;
+extern Block* blockListAlloc;
 
 #endif // CUSTOM_ALLOCATOR
