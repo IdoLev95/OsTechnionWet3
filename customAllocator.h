@@ -5,7 +5,8 @@
 * do no edit lines below!
 =============================================================================*/
 #include <stddef.h> //for size_t
-#include <set>
+#include <stdexcept>
+#include <unistd.h>
 using namespace std;
 
 void* customMalloc(size_t size);
@@ -43,19 +44,18 @@ void* customRealloc(void* ptr, size_t size);
 class Block
 {
     size_t size;
-    unsigned int start;
     bool is_free;
+    void* loc_on_heap;
     Block* nextBlock;
     Block* lastBlock;
 	public:
-		Block(size_t Size,unsigned int Start,bool Is_free):size(ALIGN_TO_MULT_OF_4(Size)),start(Start),is_free(Is_free),nextBlock(NULL),lastBlock(NULL){};
+		Block(size_t Size,bool Is_free,void* Loc_on_heap):size(ALIGN_TO_MULT_OF_4(Size)),is_free(Is_free),nextBlock(NULL)
+	,lastBlock(NULL),loc_on_heap(Loc_on_heap){};
 		unsigned int GetEndMemoryBlock();
 		void SetNextBlock(Block* NextBlock);
 		void SetLastBlock(Block* LastBlock);
 		unsigned int GetEnd();
 
 };
-extern Block* blockListFree;
-extern Block* blockListAlloc;
 
 #endif // CUSTOM_ALLOCATOR
