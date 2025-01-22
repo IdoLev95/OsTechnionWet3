@@ -37,19 +37,23 @@ void* customRealloc(void* ptr, size_t size);
 #define SBRK_FAIL (void*)(-1)
 #define ALIGN_TO_MULT_OF_4(x) (((((x) - 1) >> 2) << 2) + 4)
 
+enum BlockStatus{
+	FREE,
+	ALLOCATED
+};
+
 /*=============================================================================
 * Block
 =============================================================================*/
 //suggestion for block usage - feel free to change this
 class Block
-{
+{	public:
     size_t size;
     bool is_free;
     void* loc_on_heap;
     Block* nextBlock;
     Block* lastBlock;
-	public:
-		Block(size_t Size,bool Is_free,void* Loc_on_heap):size(ALIGN_TO_MULT_OF_4(Size)),is_free(Is_free),nextBlock(NULL)
+		Block(size_t Size,bool Is_free,void* Loc_on_heap):size(ALIGN_TO_MULT_OF_4(Size)),is_free(Is_free),nextBlock(nullptr)
 	,lastBlock(NULL),loc_on_heap(Loc_on_heap){};
 		unsigned int GetEndMemoryBlock();
 		void SetNextBlock(Block* NextBlock);
