@@ -6,6 +6,9 @@
 =============================================================================*/
 #include <stddef.h> //for size_t
 #include <stdexcept>
+#include <iostream>
+#include <cstring>
+#include <cerrno>
 #include <unistd.h>
 using namespace std;
 
@@ -43,12 +46,13 @@ void* customRealloc(void* ptr, size_t size);
 //suggestion for block usage - feel free to change this
 class Block
 {
-    size_t size;
+public:
+	size_t size;
     bool is_free;
     void* loc_on_heap;
     Block* nextBlock;
     Block* lastBlock;
-	public:
+
 		Block(size_t Size,bool Is_free,void* Loc_on_heap):size(ALIGN_TO_MULT_OF_4(Size)),is_free(Is_free),nextBlock(NULL)
 	,lastBlock(NULL),loc_on_heap(Loc_on_heap){};
 		unsigned int GetEndMemoryBlock();
