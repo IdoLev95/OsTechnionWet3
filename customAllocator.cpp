@@ -1,5 +1,7 @@
 #include "customAllocator.h"
-static Block* allblockList = nullptr;//Always Set To first in list
+Block* allblockList = nullptr;//Always Set To first in list
+Block* ptr_in_heap_to_block(void* ptr_start_heap);
+void Remove_Block_From_Lit(Block* block_to_free);
 void insert_all_block_list(Block* block_to_insert)
 {
     if (allblockList == nullptr) {
@@ -64,7 +66,7 @@ void* OurMalloc(size_t size)
 	    }
 		//TODO: need to insert validation on success
 		Block* block_to_add = (Block *)loc_on_Heap;
-		new (block_to_add) Block(size + sizeof(Block), true,loc_on_Heap + sizeof(Block));
+		new (block_to_add) Block(size + sizeof(Block), false,reinterpret_cast<char*>(loc_on_Heap) + sizeof(Block));
 		insert_all_block_list(block_to_add);
 		return block_to_add->loc_on_heap;
 	}
@@ -94,9 +96,101 @@ void* OurMalloc(size_t size)
 		return find->loc_on_heap;
 	}
 }
-void OurFree(Block* block_to_free);
+BlockStatus OurFree(Block* block_to_free);
 
-void* customMalloc(size_t size);
-void customFree(void* ptr);
-void* customCalloc(size_t nmemb, size_t size);
-void* customRealloc(void* ptr, size_t size);
+void* customMalloc(size_t size)
+{
+	return OurMalloc(size);
+}
+void customFree(void* ptr)
+{
+	Block* block_to_free = ptr_in_heap_to_block(ptr);
+	BlockStatus free_status = OurFree(block_to_free);
+	if(free_status != FREE)
+	{
+		throw std::invalid_argument("free status was not free");
+	}
+}
+//void* customCalloc(size_t nmemb, size_t size);
+//void* customRealloc(void* ptr, size_t size);
+
+BlockStatus OurFree(Block* block_to_free){
+    if(block_to_free->is_free){
+        return FREE;
+    }
+	size_t size = block_to_free->size;
+	block_to_free->is_free = true;
+
+
+	Block* cur_block = allblockList;
+	while (cur_block->nextBlock != nullptr){
+		if(cur_block->is_free){
+			if(reinterpret_cast<char*>(cur_block) + cur_block->size + 1 == reinterpret_cast<char*>(block_to_free) ){//cheak if the previous block is free
+				cur_block->nextBlock=block_to_free->nextBlock;
+				cur_block->size+=block_to_free->size;
+				block_to_free->nextBlock->lastBlock=cur_block;
+				block_to_free = cur_block;
+
+			}
+			else if(reinterpret_cast<char*>(block_to_free)+block_to_free->size + 1 == reinterpret_cast<char*>(cur_block)){//cheak if the next block is free
+				block_to_free->size+=cur_block->size;
+				block_to_free->nextBlock=cur_block->nextBlock;
+				cur_block->nextBlock->lastBlock=block_to_free;
+			}
+		}
+		cur_block=cur_block->nextBlock;
+	}
+	if((reinterpret_cast<char*>(block_to_free) + size ) == sbrk(0)){
+		void* result = sbrk(-size);
+		if (result == (void*) -1) {
+			// Handle error
+			perror("sbrk failed");
+			block_to_free->is_free = false;
+			return ALLOCATED;
+		}
+		else
+		{
+			Remove_Block_From_Lit(block_to_free);
+		}
+	}
+	return FREE;
+}
+Block* ptr_in_heap_to_block(void* ptr_start_heap)
+{
+	if(allblockList == nullptr)
+	{
+		throw std::invalid_argument("called to free when there is no block");
+	}
+	Block* curr_block = allblockList;
+	 while (curr_block != nullptr){
+		 if(curr_block->loc_on_heap == ptr_start_heap)
+		 {
+			 return curr_block;
+		 }
+		 curr_block = curr_block->nextBlock;
+	 }
+	 throw std::invalid_argument("There was not block with that ptr");
+}
+void Remove_Block_From_Lit(Block* block_to_free)
+{
+
+	if(allblockList == nullptr)
+	{
+		throw std::invalid_argument("called to free when there is no block");
+	}
+	Block* block_before = block_to_free->lastBlock;
+	Block* block_after = block_to_free->nextBlock;
+	if(block_after!=nullptr)
+	{
+		throw std::invalid_argument("Not implemented - only use is block after = null_ptr");
+	}
+	else if(block_before == nullptr)
+	{
+		allblockList = nullptr;
+		cout << "Actually Reached Here" << endl;
+	}
+	else
+	{
+		block_before->nextBlock = nullptr;
+	}
+}
