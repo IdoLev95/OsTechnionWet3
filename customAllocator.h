@@ -6,6 +6,9 @@
 =============================================================================*/
 #include <stddef.h> //for size_t
 #include <stdexcept>
+#include <iostream>
+#include <cstring>
+#include <cerrno>
 #include <unistd.h>
 using namespace std;
 
@@ -37,25 +40,31 @@ void* customRealloc(void* ptr, size_t size);
 #define SBRK_FAIL (void*)(-1)
 #define ALIGN_TO_MULT_OF_4(x) (((((x) - 1) >> 2) << 2) + 4)
 
+enum BlockStatus{
+	FREE,
+	ALLOCATED
+};
+
 /*=============================================================================
-* Block
+* Blocblock_to_freek
 =============================================================================*/
 //suggestion for block usage - feel free to change this
 class Block
 {
-    size_t size;
+public:
+	size_t size;
     bool is_free;
-    void* loc_on_heap;
     Block* nextBlock;
     Block* lastBlock;
-	public:
-		Block(size_t Size,bool Is_free,void* Loc_on_heap):size(ALIGN_TO_MULT_OF_4(Size)),is_free(Is_free),nextBlock(NULL)
-	,lastBlock(NULL),loc_on_heap(Loc_on_heap){};
+    void* loc_on_heap;
+
+		Block(size_t Size,bool Is_free,void* Loc_on_heap):size(ALIGN_TO_MULT_OF_4(Size)),is_free(Is_free),nextBlock(nullptr)
+	,lastBlock(nullptr),loc_on_heap(Loc_on_heap){};
 		unsigned int GetEndMemoryBlock();
-		void SetNextBlock(Block* NextBlock);
-		void SetLastBlock(Block* LastBlock);
+		void SetNextBlock(Block* NextBlock){nextBlock = NextBlock;}
+		void SetLastBlock(Block* LastBlock){lastBlock = LastBlock;}
 		unsigned int GetEnd();
 
 };
-
+extern Block* allblockList;
 #endif // CUSTOM_ALLOCATOR
